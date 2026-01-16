@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Show Realtime</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Night Sky Animation */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: twinkle var(--duration) infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .moon {
+            position: fixed;
+            top: 50px;
+            right: 50px;
+            width: 80px;
+            height: 80px;
+            background: #fdfae5;
+            border-radius: 50%;
+            box-shadow: 0 0 40px 10px rgba(253, 250, 229, 0.3);
+            z-index: -1;
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+        }
+
+        .active-tab {
+            border-bottom: 3px solid #60a5fa;
+            color: #60a5fa;
+        }
+
+        .admin-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .qr-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1001;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .whatsapp-float {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #25d366;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30px;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+            z-index: 99;
+            transition: transform 0.3s;
+        }
+
+        .whatsapp-float:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="stars" id="star-container"></div>
+    <div class="moon"></div>
+
+    <!-- Navigation -->
+    <nav class="glass sticky top-0 z-50 px-6 py-4 flex justify-between items-center mx-4 mt-4">
+        <div class="flex items-center gap-3">
+            <img id="display-logo" src="https://via.placeholder.com/50" alt="Logo" class="w-10 h-10 rounded-full object-cover">
+            <span class="font-bold text-xl tracking-wider" id="web-title">Order Show</span>
+        </div>
+        <div class="flex gap-6">
+            <button onclick="showPage('info')" id="btn-info" class="nav-btn active-tab pb-1 transition-all">Info</button>
+            <button onclick="showPage('order')" id="btn-order" class="nav-btn pb-1 transition-all">Order</button>
+            <button onclick="showPage('membership')" id="btn-membership" class="nav-btn pb-1 transition-all">Member</button>
+            <button onclick="openAdminAuth()" class="text-gray-400 hover:text-white"><i class="fas fa-cog"></i></button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto p-6 pb-24">
+        
+        <!-- Section 1: Info Page -->
+        <section id="page-info" class="page-content animate-fade-in">
+            <div class="glass p-8 max-w-3xl mx-auto text-center">
+                <h1 class="text-4xl font-bold mb-6 text-blue-300" id="info-headline">Selamat Datang di Show Kami</h1>
+                <div class="mb-6">
+                    <img id="info-image" src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80" alt="Show Info" class="w-full h-64 object-cover rounded-xl mb-4 border border-blue-900/50">
+                </div>
+                <p class="text-lg text-gray-300 leading-relaxed" id="info-description">
+                    Nikmati pengalaman pertunjukan visual terbaik di bawah langit malam yang memukau. Kami menyajikan berbagai atraksi menarik setiap minggunya.
+                </p>
+                <div class="mt-8 flex justify-center gap-4">
+                    <div class="glass p-4 rounded-lg">
+                        <i class="fas fa-calendar-alt text-blue-400 mb-2"></i>
+                        <p class="text-xs uppercase opacity-60">Jadwal Terdekat</p>
+                        <p class="font-bold" id="info-date">Setiap Sabtu Malam</p>
+                    </div>
+                    <div class="glass p-4 rounded-lg">
+                        <i class="fas fa-map-marker-alt text-blue-400 mb-2"></i>
+                        <p class="text-xs uppercase opacity-60">Lokasi</p>
+                        <p class="font-bold" id="info-location">Amphitheater Utama</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Order Page -->
+        <section id="page-order" class="page-content hidden">
+            <h2 class="text-3xl font-bold text-center mb-10 text-blue-200">Pilih Pertunjukan Anda</h2>
+            <div id="show-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Cards will be generated by JS -->
+            </div>
+        </section>
+
+        <!-- Section 3: Membership Page -->
+        <section id="page-membership" class="page-content hidden">
+            <div class="max-w-xl mx-auto text-center">
+                <div id="membership-status-box" class="mb-8 p-4 rounded-full font-bold">
+                    <!-- Status dynamic -->
+                </div>
+                <div id="membership-content" class="glass p-8 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4">
+                        <i class="fas fa-crown text-yellow-400 text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4" id="member-title">Premium Member Pass</h3>
+                    <p class="text-gray-400 mb-6" id="member-desc">Dapatkan akses prioritas, diskon tiket 20%, dan merchandise eksklusif setiap bulan.</p>
+                    <div class="text-4xl font-bold text-blue-300 mb-8" id="member-price">Rp 150.000 <span class="text-sm font-normal text-gray-500">/bulan</span></div>
+                    <button id="btn-order-member" class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-xl font-bold transition-all transform hover:scale-105">
+                        Daftar Membership Sekarang
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- WhatsApp Support -->
+    <a href="https://wa.me/6288809048431" target="_blank" class="whatsapp-float">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <!-- QRIS Modal -->
+    <div id="qr-modal" class="qr-modal px-4">
+        <div class="glass p-6 max-w-sm w-full text-center">
+            <h3 class="text-xl font-bold mb-4">Scan QRIS untuk Bayar</h3>
+            <img id="display-qris" src="https://via.placeholder.com/300x400?text=QRIS+ADMIN" alt="QRIS" class="w-full rounded-lg mb-6 border-4 border-white">
+            <p class="text-sm text-gray-400 mb-6">Silakan simpan bukti bayar dan kirimkan melalui WhatsApp konfirmasi.</p>
+            <button id="confirm-payment-btn" class="w-full bg-green-600 py-3 rounded-lg font-bold mb-3">Sudah Bayar, Konfirmasi WA</button>
+            <button onclick="closeQR()" class="text-gray-400 hover:text-white">Batal</button>
+        </div>
+    </div>
+
+    <!-- Admin Auth Modal -->
+    <div id="admin-auth" class="admin-modal">
+        <div class="glass p-8 max-w-sm w-full">
+            <h2 class="text-2xl font-bold mb-4 text-center">Admin Access</h2>
+            <input type="password" id="admin-pin" class="w-full p-3 bg-gray-800 border border-gray-700 rounded mb-4 text-center" placeholder="Masukkan Kode">
+            <div class="flex gap-2">
+                <button onclick="verifyAdmin()" class="flex-1 bg-blue-600 py-2 rounded font-bold">Masuk</button>
+                <button onclick="closeAdminAuth()" class="flex-1 bg-gray-700 py-2 rounded font-bold">Batal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel (Dashboard) -->
+    <div id="admin-panel" class="hidden fixed inset-0 bg-[#090A0F] z-[2000] overflow-y-auto p-6">
+        <div class="max-w-4xl mx-auto">
+            <div class="flex justify-between items-center mb-10 border-b border-gray-800 pb-4">
+                <h1 class="text-3xl font-bold text-blue-400">Admin Control Center</h1>
+                <button onclick="closeAdminPanel()" class="bg-red-600 px-4 py-2 rounded-lg">Keluar Panel</button>
+            </div>
+
+            <!-- Tab Admin -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Web Identity -->
+                <div class="glass p-6">
+                    <h3 class="font-bold border-b border-gray-700 mb-4 pb-2">Identitas Web</h3>
+                    <div class="space-y-4">
+                        <label class="block text-sm">URL Logo</label>
+                        <input type="text" id="inp-logo" class="w-full p-2 bg-black border border-gray-700 rounded">
+                        <label class="block text-sm">URL QRIS</label>
+                        <input type="text" id="inp-qris" class="w-full p-2 bg-black border border-gray-700 rounded">
+                        <label class="block text-sm">Nama Web</label>
+                        <input type="text" id="inp-title" class="w-full p-2 bg-black border border-gray-700 rounded">
+                    </div>
+                </div>
+
+                <!-- Info Page Editor -->
+                <div class="glass p-6">
+                    <h3 class="font-bold border-b border-gray-700 mb-4 pb-2">Halaman Informasi</h3>
+                    <div class="space-y-4">
+                        <label class="block text-sm">Headline</label>
+                        <input type="text" id="inp-info-h" class="w-full p-2 bg-black border border-gray-700 rounded">
+                        <label class="block text-sm">Deskripsi</label>
+                        <textarea id="inp-info-d" class="w-full p-2 bg-black border border-gray-700 rounded h-24"></textarea>
+                    </div>
+                </div>
+
+                <!-- Membership Editor -->
+                <div class="glass p-6">
+                    <h3 class="font-bold border-b border-gray-700 mb-4 pb-2">Membership</h3>
+                    <div class="space-y-4">
+                        <label class="block text-sm">Status</label>
+                        <select id="inp-mem-status" class="w-full p-2 bg-black border border-gray-700 rounded text-white">
+                            <option value="open">DIBUKA</option>
+                            <option value="closed">DITUTUP</option>
+                        </select>
+                        <label class="block text-sm">Harga</label>
+                        <input type="text" id="inp-mem-price" class="w-full p-2 bg-black border border-gray-700 rounded">
+                        <label class="block text-sm">Deskripsi Singkat</label>
+                        <input type="text" id="inp-mem-desc" class="w-full p-2 bg-black border border-gray-700 rounded">
+                    </div>
+                </div>
+
+                <!-- Shows List Manager -->
+                <div class="glass p-6">
+                    <h3 class="font-bold border-b border-gray-700 mb-4 pb-2">Data Pertunjukan</h3>
+                    <div id="admin-shows-list" class="space-y-4 max-h-64 overflow-y-auto pr-2">
+                        <!-- List of shows to edit -->
+                    </div>
+                    <button onclick="addShowItem()" class="mt-4 w-full bg-green-700 py-2 rounded-lg text-sm">+ Tambah Show</button>
+                </div>
+            </div>
+
+            <div class="mt-10 mb-20">
+                <button onclick="saveAllChanges()" class="w-full bg-blue-500 py-4 rounded-xl font-bold text-xl shadow-lg shadow-blue-900/40">SIMPAN SEMUA PERUBAHAN</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initial Data Store
+        let siteData = {
+            logo: "https://via.placeholder.com/150/000000/FFFFFF/?text=OS",
+            qris: "https://via.placeholder.com/300x400?text=QRIS+ADMIN",
+            title: "Order Show Realtime",
+            info: {
+                headline: "Malam Penuh Bintang",
+                description: "Rasakan magisnya pertunjukan live kami dengan teknologi visual tercanggih. Setiap detik adalah kenangan yang tak terlupakan.",
+                image: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80",
+                date: "Minggu, 20 Jan 2026",
+                location: "Galaxy Ballroom"
+            },
+            membership: {
+                status: "open",
+                price: "Rp 150.000",
+                description: "Akses tak terbatas ke seluruh show selama 1 bulan penuh."
+            },
+            shows: [
+                {
+                    id: 1,
+                    name: "Midnight Galaxy",
+                    image: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?auto=format&fit=crop&w=500&q=80",
+                    lineup: "DJ Luna, Star Dust Band",
+                    time: "22:00 - 01:00",
+                    price: "Rp 50.000",
+                    criteria: "Dewasa (18+)"
+                },
+                {
+                    id: 2,
+                    name: "Starlight Opera",
+                    image: "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=500&q=80",
+                    lineup: "Sophia Nightingale",
+                    time: "19:00 - 21:00",
+                    price: "Rp 75.000",
+                    criteria: "Semua Umur"
+                }
+            ]
+        };
+
+        const adminWA = "+6288809048431";
+        let pendingOrder = null;
+
+        // Initialize Stars
+        function createStars() {
+            const container = document.getElementById('star-container');
+            const starCount = 150;
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = Math.random() * 3 + 'px';
+                star.style.width = size;
+                star.style.height = size;
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.setProperty('--duration', Math.random() * 3 + 2 + 's');
+                container.appendChild(star);
+            }
+        }
+
+        // Navigation
+        function showPage(pageId) {
+            document.querySelectorAll('.page-content').forEach(p => p.classList.add('hidden'));
+            document.getElementById('page-' + pageId).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-tab'));
+            document.getElementById('btn-' + pageId).classList.add('active-tab');
+        }
+
+        // Render Data
+        function renderUI() {
+            // Header
+            document.getElementById('display-logo').src = siteData.logo;
+            document.getElementById('web-title').innerText = siteData.title;
+
+            // Info Page
+            document.getElementById('info-headline').innerText = siteData.info.headline;
+            document.getElementById('info-description').innerText = siteData.info.description;
+            document.getElementById('info-date').innerText = siteData.info.date;
+            document.getElementById('info-location').innerText = siteData.info.location;
+
+            // Order Page
+            const showList = document.getElementById('show-list');
+            showList.innerHTML = '';
+            siteData.shows.forEach(show => {
+                showList.innerHTML += `
+                    <div class="glass overflow-hidden group hover:scale-[1.02] transition-transform">
+                        <img src="${show.image}" alt="${show.name}" class="w-full h-48 object-cover">
+                        <div class="p-5">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="text-xl font-bold text-blue-200">${show.name}</h4>
+                                <span class="bg-blue-900/50 text-blue-300 text-xs px-2 py-1 rounded border border-blue-700">${show.criteria}</span>
+                            </div>
+                            <p class="text-sm text-gray-400 mb-4"><i class="fas fa-users mr-2"></i>${show.lineup}</p>
+                            <div class="flex justify-between items-center text-sm mb-4 bg-black/30 p-2 rounded">
+                                <span><i class="far fa-clock mr-1 text-blue-400"></i> ${show.time}</span>
+                                <span class="font-bold text-blue-300">${show.price}</span>
+                            </div>
+                            <button onclick="openOrderModal('show', '${show.name}', '${show.price}')" class="w-full bg-blue-600 hover:bg-blue-500 py-2 rounded-lg font-bold transition-colors">
+                                Order Sekarang
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Membership Page
+            const statusBox = document.getElementById('membership-status-box');
+            if(siteData.membership.status === 'open') {
+                statusBox.innerHTML = '<span class="text-green-400"><i class="fas fa-door-open mr-2"></i> PENDAFTARAN DIBUKA</span>';
+                statusBox.className = "mb-8 p-4 rounded-full font-bold bg-green-900/20 border border-green-800";
+                document.getElementById('membership-content').style.opacity = "1";
+                document.getElementById('btn-order-member').disabled = false;
+            } else {
+                statusBox.innerHTML = '<span class="text-red-400"><i class="fas fa-door-closed mr-2"></i> PENDAFTARAN DITUTUP</span>';
+                statusBox.className = "mb-8 p-4 rounded-full font-bold bg-red-900/20 border border-red-800";
+                document.getElementById('membership-content').style.opacity = "0.5";
+                document.getElementById('btn-order-member').disabled = true;
+                document.getElementById('btn-order-member').innerText = "Maaf, Sedang Tutup";
+            }
+            document.getElementById('member-title').innerText = siteData.membership.title || "Premium Pass";
+            document.getElementById('member-desc').innerText = siteData.membership.description;
+            document.getElementById('member-price').innerHTML = `${siteData.membership.price} <span class="text-sm font-normal text-gray-500">/bulan</span>`;
+
+            // Global QRIS
+            document.getElementById('display-qris').src = siteData.qris;
+        }
+
+        // Order Logic
+        function openOrderModal(type, name, price) {
+            pendingOrder = { type, name, price };
+            document.getElementById('qr-modal').style.display = 'flex';
+        }
+
+        function closeQR() {
+            document.getElementById('qr-modal').style.display = 'none';
+        }
+
+        document.getElementById('confirm-payment-btn').onclick = function() {
+            const message = `Halo Admin, saya ingin konfirmasi pembayaran:\n\n` +
+                          `Item: ${pendingOrder.name}\n` +
+                          `Harga: ${pendingOrder.price}\n` +
+                          `Tipe: ${pendingOrder.type}\n\n` +
+                          `Berikut adalah bukti bayarnya (kirim gambar setelah ini).`;
+            const waUrl = `https://wa.me/${adminWA.replace('+','')}/?text=${encodeURIComponent(message)}`;
+            window.open(waUrl, '_blank');
+            closeQR();
+        };
+
+        document.getElementById('btn-order-member').onclick = function() {
+            openOrderModal('membership', 'Premium Membership', siteData.membership.price);
+        };
+
+        // Admin Security
+        function openAdminAuth() {
+            document.getElementById('admin-auth').style.display = 'flex';
+        }
+
+        function closeAdminAuth() {
+            document.getElementById('admin-auth').style.display = 'none';
+            document.getElementById('admin-pin').value = '';
+        }
+
+        function verifyAdmin() {
+            const pin = document.getElementById('admin-pin').value;
+            if(pin === '011102') {
+                closeAdminAuth();
+                openAdminPanel();
+            } else {
+                alert('Kode Salah!');
+            }
+        }
+
+        // Admin Panel Logic
+        function openAdminPanel() {
+            document.getElementById('admin-panel').classList.remove('hidden');
+            
+            // Load current data into inputs
+            document.getElementById('inp-logo').value = siteData.logo;
+            document.getElementById('inp-qris').value = siteData.qris;
+            document.getElementById('inp-title').value = siteData.title;
+            document.getElementById('inp-info-h').value = siteData.info.headline;
+            document.getElementById('inp-info-d').value = siteData.info.description;
+            document.getElementById('inp-mem-status').value = siteData.membership.status;
+            document.getElementById('inp-mem-price').value = siteData.membership.price;
+            document.getElementById('inp-mem-desc').value = siteData.membership.description;
+
+            renderAdminShows();
+        }
+
+        function renderAdminShows() {
+            const list = document.getElementById('admin-shows-list');
+            list.innerHTML = '';
+            siteData.shows.forEach((s, index) => {
+                list.innerHTML += `
+                    <div class="bg-gray-900 p-3 rounded border border-gray-700 space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-xs text-blue-400 font-bold">Show #${index+1}</span>
+                            <button onclick="removeShow(${index})" class="text-red-500 text-xs">Hapus</button>
+                        </div>
+                        <input type="text" placeholder="Nama Show" value="${s.name}" onchange="updateShowData(${index}, 'name', this.value)" class="w-full bg-black text-xs p-1 border border-gray-800">
+                        <input type="text" placeholder="Harga" value="${s.price}" onchange="updateShowData(${index}, 'price', this.value)" class="w-full bg-black text-xs p-1 border border-gray-800">
+                        <input type="text" placeholder="URL Gambar" value="${s.image}" onchange="updateShowData(${index}, 'image', this.value)" class="w-full bg-black text-xs p-1 border border-gray-800">
+                    </div>
+                `;
+            });
+        }
+
+        function updateShowData(index, key, val) {
+            siteData.shows[index][key] = val;
+        }
+
+        function addShowItem() {
+            siteData.shows.push({
+                name: "Show Baru",
+                image: "https://via.placeholder.com/500",
+                lineup: "Artis",
+                time: "00:00",
+                price: "Rp 0",
+                criteria: "Semua Umur"
+            });
+            renderAdminShows();
+        }
+
+        function removeShow(index) {
+            siteData.shows.splice(index, 1);
+            renderAdminShows();
+        }
+
+        function saveAllChanges() {
+            siteData.logo = document.getElementById('inp-logo').value;
+            siteData.qris = document.getElementById('inp-qris').value;
+            siteData.title = document.getElementById('inp-title').value;
+            siteData.info.headline = document.getElementById('inp-info-h').value;
+            siteData.info.description = document.getElementById('inp-info-d').value;
+            siteData.membership.status = document.getElementById('inp-mem-status').value;
+            siteData.membership.price = document.getElementById('inp-mem-price').value;
+            siteData.membership.description = document.getElementById('inp-mem-desc').value;
+
+            // Save to LocalStorage for persistence
+            localStorage.setItem('orderShowData', JSON.stringify(siteData));
+            
+            renderUI();
+            alert('Semua data berhasil diperbarui!');
+        }
+
+        function closeAdminPanel() {
+            document.getElementById('admin-panel').classList.add('hidden');
+        }
+
+        // Startup
+        window.onload = function() {
+            createStars();
+            // Load from storage if exists
+            const saved = localStorage.getItem('orderShowData');
+            if(saved) siteData = JSON.parse(saved);
+            renderUI();
+        }
+    </script>
+</body>
+</html>
+
